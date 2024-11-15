@@ -157,26 +157,66 @@ function saveAsPDF() {
   pdf.save("training.pdf");
 }
 
-// **Popup Voor Nieuwe Canvas**
 function newCanvas() {
-  generateBackgroundSelector();
-  document.getElementById("backgroundPopup").style.display = "block";
+  generateBackgroundSelector(); // Generate the available backgrounds
+  const popup = document.getElementById("backgroundPopup");
+  if (popup) {
+    popup.style.display = "block"; // Show the popup
+  } else {
+    console.error("Popup element 'backgroundPopup' not found");
+  }
 }
 
-// **Achtergrond Selecteren**
-function setBackground() {
-  const selectedValue = document.getElementById("backgroundSelector").value;
-  const selectedBackground = availableBackgrounds.find((bg) => bg.id === selectedValue);
+function closeBackgroundPopup() {
+  const popup = document.getElementById("backgroundPopup");
+  if (popup) {
+    popup.style.display = "none"; // Hide the popup
+  }
+}
 
-  if (selectedBackground) {
-    loadBackground(selectedBackground.svgPath);
+
+function generateBackgroundSelector() {
+  const popup = document.getElementById("backgroundPopup");
+  const selector = document.getElementById("backgroundSelector");
+
+  if (!selector) {
+    console.error("Element 'backgroundSelector' niet gevonden");
+    return;
   }
 
-  document.getElementById("backgroundPopup").style.display = "none";
+  selector.innerHTML = ""; // Verwijder oude opties
+
+  availableBackgrounds.forEach((bg) => {
+    const option = document.createElement("option");
+    option.value = bg.id;
+    option.textContent = bg.label;
+    selector.appendChild(option);
+  });
+
+  popup.style.display = "block"; // Toon de popup voor achtergrondselectie
 }
 
-// **Achtergrond Laden**
+function setBackground() {
+  const selector = document.getElementById("backgroundSelector");
+  const selectedValue = selector ? selector.value : null;
+  console.log("Geselecteerde waarde:", selectedValue);
+
+  const selectedBackground = availableBackgrounds.find((bg) => bg.id === selectedValue);
+  if (selectedBackground) {
+    console.log("Geselecteerde achtergrond:", selectedBackground);
+    loadBackground(selectedBackground.svgPath);
+  } else {
+    console.error("Geen geldige achtergrond geselecteerd.");
+  }
+
+  const popup = document.getElementById("backgroundPopup");
+  if (popup) {
+    popup.style.display = "none";
+  }
+}
+
 function loadBackground(file) {
+  console.log("Laadt achtergrond:", file);
   fetch(file)
     .then((response) => response.text())
     .then((svgText) => {
@@ -186,9 +226,10 @@ function loadBackground(file) {
 
       img.onload = () => {
         staticBackground = img;
-        drawnObjects = [];
-        selectedObjects = [];
-        redrawCanvas();
+        drawnObjects = []; // Wis bestaande objecten
+        selectedObjects = []; // Wis selectie
+        redrawCanvas(); // Herteken canvas
+        console.log("Achtergrond geladen en canvas bijgewerkt.");
         URL.revokeObjectURL(url);
       };
 
