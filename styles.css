@@ -50,11 +50,6 @@ body {
    /*fill: white;  Optioneel: kleur aanpassen */
   }
   
-  .toolbar-button:hover svg {
-    /*fill: #00bfff;  Kleur veranderen bij hover */
-  }
-  
-  
   .canvas-container {
     flex: 1;
     background: #202020;
@@ -75,36 +70,23 @@ body {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background: #333;
-    color: white;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    display: none;
-    z-index: 1000;
-  }
-  
-  .popup h3 {
-    margin-bottom: 10px;
-  }
-  
-  .popup button {
-    background: #007bff;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
-    cursor: pointer;
-  }
-  
-  .popup button:hover {
-    background: #0056b3;
-  }
-  
-  #backgroundSelector {
-    width: 100%;
-    padding: 5px;
-    margin-bottom: 10px;
-    border-radius: 5px;
+    background-color: white;
     border: 1px solid #ccc;
+    padding: 20px;
+    z-index: 1000;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  .popup-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .popup-content h3 {
+    margin-top: 0;
+  }
+  
+  .popup-content button {
+    margin-top: 10px;
   }

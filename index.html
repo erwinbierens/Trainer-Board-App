@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trainer App</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/lodash/lodash.min.js"></script> <!-- Lodash toegevoegd -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+</head>
+<body>
+  <div class="app-container">
+    <header class="top-menu">
+        <button onclick="newCanvas()">Nieuw Canvas</button>
+        <button onclick="setBackground()">Selecteer</button>
+      <button onclick="saveAsPNG()">Opslaan als PNG</button>
+            <button onclick="saveAsPDF()">Opslaan als PDF</button>
+    </header>
+
+    <div class="main-layout">
+
+        <div id="backgroundPopup" class="popup" style="display: none;">
+      <div class="popup-content">
+        <h3>Kies een Achtergrond</h3>
+        <select id="backgroundSelector"></select>
+        <button onclick="setBackground()">Bevestigen</button>
+        <button onclick="closeBackgroundPopup()">Sluiten</button>
+      </div>
+    </div>
+
+      <aside class="toolbar">
+        <h3>Tools</h3>
+        <button onclick="selectTool('pion')">Pion</button>
+        <button onclick="selectTool('goal')">Goal</button>
+        <button onclick="selectTool('text')">Tekst</button>
+      </aside>
+
+      <main class="canvas-container">
+        <canvas id="trainingCanvas"></canvas>
+      </main>
+
+      <aside class="toolbox">
+        <h3>Tools Details</h3>
+        <div id="toolDetails">
+          <p>Geen selectie</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+  <script src="background.js"></script>
+<script src="object.js"></script>
+  <script src="scripts.js"></script> <!-- Je aangepaste script -->
+</body>
+</html>
