@@ -83,35 +83,35 @@ const availableObjects = [
       {
         id: "speler front",
         label: "Speler-front",
-        sizePercentage: 100,
+        sizePercentage: 50,
         svgPath: "img/spelers/speler-front_left.svg",
         resizable: false, // Grootte kan worden aangepast
       },
       {
         id: "speler back",
         label: "Speler-back",
-        sizePercentage: 100,
+        sizePercentage: 50,
         svgPath: "img/spelers/speler-back_left.svg",
         resizable: false, // Grootte kan worden aangepast
       },
       {
         id: "Keeper front",
         label: "keeper-front",
-        sizePercentage: 100,
+        sizePercentage: 50,
         svgPath: "img/spelers/keeper-front_left.svg",
         resizable: false, // Grootte kan worden aangepast
       },
       {
         id: "Keeper Back",
         label: "keeper-back",
-        sizePercentage: 100,
+        sizePercentage: 50,
         svgPath: "img/spelers/keeper-back_left_f.svg",
         resizable: false, // Grootte kan worden aangepast
       },
       {
         id: "Coach",
         label: "Coach",
-        sizePercentage: 100,
+        sizePercentage: 50,
         svgPath: "img/spelers/coach-front_left.svg",
         resizable: false, // Grootte kan worden aangepast
       },

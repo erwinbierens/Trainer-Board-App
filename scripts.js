@@ -28,6 +28,7 @@ toolbar.style.maxHeight = "95vh";
 // **Cache voor SVG-afbeeldingen**
 const svgCache = new Map();
 
+
 // **Canvas Initialiseren**
 function resizeCanvas() {
   canvas.width = canvas.parentElement.clientWidth;
@@ -41,14 +42,14 @@ resizeCanvas();
 function saveHistory() {
   history.push([...drawnObjects]);
   if (history.length > 20) {
-    history.shift(); // Houd alleen de laatste 20 acties bij om geheugengebruik te beperken
+    history.shift();
   }
 }
 
 // **Undo Functionaliteit**
 function undo() {
   if (history.length > 0) {
-    drawnObjects = history.pop(); // Herstel de laatste opgeslagen staat
+    drawnObjects = history.pop();
     redrawCanvas();
   }
 }
@@ -67,8 +68,6 @@ function saveAsPNG() {
   if (staticBackground) {
     tempCtx.drawImage(staticBackground, 0, 0, canvas.width, canvas.height);
   }
-
-
 
   drawnObjects.forEach((obj) => {
     if (obj.type === "svg") {
@@ -174,7 +173,6 @@ function closeBackgroundPopup() {
   }
 }
 
-
 function generateBackgroundSelector() {
   const popup = document.getElementById("backgroundPopup");
   const selector = document.getElementById("backgroundSelector");
@@ -271,7 +269,9 @@ function generateToolbar() {
   // Voeg een knop toe voor de selectietool (handje)
   const selectButton = document.createElement("button");
   selectButton.classList.add("toolbar-button");
-  selectButton.innerHTML = "🖐️"; // Handje-icoon
+  selectButton.innerHTML = `
+  <img src="img/icons/select.svg" alt="Select" title="Selecttool" width="24" height="24">
+`;
   selectButton.title = "Selecteer en verplaats objecten";
   selectButton.onclick = () => {
     currentTool = null;
@@ -285,7 +285,9 @@ function generateToolbar() {
   // Voeg een knop toe voor de undo-functionaliteit
   const undoButton = document.createElement("button");
   undoButton.classList.add("toolbar-button");
-  undoButton.innerHTML = "↩️"; // Undo-icoon
+  undoButton.innerHTML = `
+  <img src="img/icons/undo.svg" alt="Undo" title="Actie ongedaan maken" width="24" height="24">
+`;
   undoButton.title = "Actie ongedaan maken";
   undoButton.onclick = undo;
   toolbar.appendChild(undoButton);
@@ -293,7 +295,9 @@ function generateToolbar() {
   // Voeg een knop toe voor de lijntool
   const lineButton = document.createElement("button");
   lineButton.classList.add("toolbar-button");
-  lineButton.innerHTML = "-->"; // Lijntool-icoon
+  lineButton.innerHTML = `
+  <img src="img/icons/line.svg" alt="Line" title="Line tool" width="24" height="24">
+`;
   lineButton.title = "Teken een lijn met pijl";
   lineButton.onclick = () => {
     currentTool = { id: "line" };
@@ -304,6 +308,21 @@ function generateToolbar() {
   };
   toolbar.appendChild(lineButton);
 
+  // Voeg een knop toe voor de gebogen lijn tool
+  const curveButton = document.createElement("button");
+  curveButton.classList.add("toolbar-button");
+  curveButton.innerHTML = `
+  <img src="img/icons/line-curved.svg" alt="Curve" title="Curve tool" width="24" height="24">
+`;
+  curveButton.title = "Teken een gebogen lijn";
+  curveButton.onclick = () => {
+    currentTool = { id: "curve" };
+    selectMode = false;
+    selectedObjects = [];
+    redrawCanvas();
+    updateToolDetails();
+  };
+  toolbar.appendChild(curveButton);
 
   availableObjects.forEach((obj) => {
     const button = document.createElement("button");
@@ -383,178 +402,256 @@ function isLineInSelectionBox(line, selectionStart, selectionBox) {
   );
 }
 
-// **Canvas Hertekenen**
+
+// Functie voor het hertekenen van het canvas
 function redrawCanvas() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-
   if (staticBackground) {
-    ctx.drawImage(staticBackground, 0, 0, canvas.width, canvas.height);
+      ctx.drawImage(staticBackground, 0, 0, canvas.width, canvas.height);
   }
 
   drawnObjects.forEach((obj) => {
-    if (obj.type === "svg") {
-      let sizeFactor = (obj.sizePercentage / 100);
-      obj.scaledWidth = obj.width * sizeFactor * (canvas.width / Math.min(canvas.width, canvas.height));
-      obj.scaledHeight = obj.height * sizeFactor * (canvas.height / Math.min(canvas.width, canvas.height));
-  
-      ctx.drawImage(obj.svg, obj.x - obj.scaledWidth / 2, obj.y - obj.scaledHeight / 2, obj.scaledWidth, obj.scaledHeight);
-    } else if (obj.type === "line") {
-      ctx.strokeStyle = selectedObjects.includes(obj) ? "blue" : "black";
-      ctx.lineWidth = 2;
-      if (obj.isDashed) {
-        ctx.setLineDash([5, 5]);
-      } else {
-        ctx.setLineDash([]);
+      if (obj.type === "line") {
+          ctx.strokeStyle = obj.color || "black";
+          ctx.lineWidth = obj.lineWidth || 2;
+          ctx.setLineDash(obj.isDashed ? [5, 5] : []);
+          ctx.beginPath();
+          ctx.moveTo(obj.startX, obj.startY);
+          ctx.lineTo(obj.endX, obj.endY);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          drawArrow(ctx, obj.startX, obj.startY, obj.endX, obj.endY);
+      } else if (obj.type === "curve") {
+          if (obj.points.length > 1) {
+              ctx.strokeStyle = obj.color || "black";
+              ctx.lineWidth = obj.lineWidth || 2;
+              ctx.setLineDash(obj.isDashed ? [5, 5] : []);
+              ctx.beginPath();
+              ctx.moveTo(obj.points[0].x, obj.points[0].y);
+              
+              // Gebruik `bezierCurveTo` voor een vloeiende curve
+              for (let i = 1; i < obj.points.length - 2; i++) {
+                  const cp = obj.points[i];
+                  const next = obj.points[i + 1];
+                  const ep = {
+                      x: (cp.x + next.x) / 2,
+                      y: (cp.y + next.y) / 2
+                  };
+                  ctx.quadraticCurveTo(cp.x, cp.y, ep.x, ep.y);
+              }
+              // Behandel de laatste twee punten om de curve af te maken
+              const secondLast = obj.points[obj.points.length - 2];
+              const last = obj.points[obj.points.length - 1];
+              ctx.quadraticCurveTo(secondLast.x, secondLast.y, last.x, last.y);
+              
+              ctx.stroke();
+              ctx.setLineDash([]);
+              // Teken een pijl aan het einde van de curve
+              const lastPoint = obj.points[obj.points.length - 1];
+              const prevPoint = obj.points[obj.points.length - 2];
+              drawArrow(ctx, prevPoint.x, prevPoint.y, lastPoint.x, lastPoint.y);
+          }
+      } else if (obj.type === "svg") {
+          ctx.drawImage(obj.svg, obj.x - obj.scaledWidth / 2, obj.y - obj.scaledHeight / 2, obj.scaledWidth, obj.scaledHeight);
       }
-      ctx.beginPath();
-      ctx.moveTo(obj.startX, obj.startY);
-      ctx.lineTo(obj.endX, obj.endY);
-      ctx.stroke();
-      ctx.setLineDash([]);
-  
-      // Teken de pijl aan het einde van de lijn
-      const angle = Math.atan2(obj.endY - obj.startY, obj.endX - obj.startX);
-      const arrowLength = 10;
-      ctx.beginPath();
-      ctx.moveTo(obj.endX, obj.endY);
-      ctx.lineTo(
-        obj.endX - arrowLength * Math.cos(angle - Math.PI / 6),
-        obj.endY - arrowLength * Math.sin(angle - Math.PI / 6)
-      );
-      ctx.moveTo(obj.endX, obj.endY);
-      ctx.lineTo(
-        obj.endX - arrowLength * Math.cos(angle + Math.PI / 6),
-        obj.endY - arrowLength * Math.sin(angle + Math.PI / 6)
-      );
-      ctx.stroke();
-    }
   });
 
+  // Teken selectie om geselecteerde objecten heen
   selectedObjects.forEach((obj) => {
-    ctx.strokeStyle = "blue";
-    ctx.lineWidth = 2;
-    ctx.strokeRect(
-      obj.x - obj.scaledWidth / 2,
-      obj.y - obj.scaledHeight / 2,
-      obj.scaledWidth,
-      obj.scaledHeight
-    );
+      ctx.strokeStyle = "blue";
+      ctx.lineWidth = 2;
+      if (obj.type === "line") {
+          ctx.beginPath();
+          ctx.setLineDash([5, 5]);
+          ctx.moveTo(obj.startX, obj.startY);
+          ctx.lineTo(obj.endX, obj.endY);
+          ctx.stroke();
+          ctx.setLineDash([]);
+      } else if (obj.type === "curve") {
+          ctx.setLineDash([5, 5]);
+          ctx.beginPath();
+          ctx.moveTo(obj.points[0].x, obj.points[0].y);
+          for (let i = 1; i < obj.points.length - 1; i++) {
+              const cp = obj.points[i];
+              const ep = obj.points[i + 1];
+              ctx.quadraticCurveTo(cp.x, cp.y, ep.x, ep.y);
+          }
+          ctx.stroke();
+          ctx.setLineDash([]);
+      } else if (obj.type === "svg") {
+          ctx.setLineDash([5, 5]);
+          ctx.strokeRect(
+              obj.x - obj.scaledWidth / 2,
+              obj.y - obj.scaledHeight / 2,
+              obj.scaledWidth,
+              obj.scaledHeight
+          );
+          ctx.setLineDash([]);
+      }
   });
 }
 
 
+// Functie om een pijl te tekenen aan het einde van een lijn of curve
+function drawArrow(context, fromX, fromY, toX, toY) {
+  const headLength = 10; // Lengte van de pijlpunt
+  const angle = Math.atan2(toY - fromY, toX - fromX);
+  context.beginPath();
+  context.moveTo(toX, toY);
+  context.lineTo(
+    toX - headLength * Math.cos(angle - Math.PI / 6),
+    toY - headLength * Math.sin(angle - Math.PI / 6)
+  );
+  context.lineTo(
+    toX - headLength * Math.cos(angle + Math.PI / 6),
+    toY - headLength * Math.sin(angle + Math.PI / 6)
+  );
+  context.lineTo(toX, toY);
+  context.closePath();
+  context.fillStyle = context.strokeStyle;
+  context.fill();
+}
 
-// **Start Selectie of Slepen**
+// Mouse event listeners voor interactie
 canvas.addEventListener("mousedown", (e) => {
   const rect = canvas.getBoundingClientRect();
   const x = e.clientX - rect.left;
   const y = e.clientY - rect.top;
 
-  if (currentTool && currentTool.id === "line") {
-    // Start het tekenen van een lijn
+  if (currentTool && currentTool.id === "curve") {
+    if (!isDrawingCurve) {
+      isDrawingCurve = true;
+      curvePoints = [{ x, y }];
+    } else {
+      curvePoints.push({ x, y });
+    }
+    redrawCanvas();
+  } else if (currentTool && currentTool.id === "line") {
     isDrawingLine = true;
     lineStart = { x, y };
   } else if (selectMode) {
-    // Controleer of je een lijn selecteert
-    const clickedLine = drawnObjects.find((obj) => {
+    let clickedObject = drawnObjects.find((obj) => {
       if (obj.type === "line") {
         const distanceToStart = Math.hypot(x - obj.startX, y - obj.startY);
         const distanceToEnd = Math.hypot(x - obj.endX, y - obj.endY);
         const lineLength = Math.hypot(obj.endX - obj.startX, obj.endY - obj.startY);
-        const buffer = 5; // Pixel buffer om lijnen te detecteren
-
-        // Controleer of de klik dicht bij de lijn is
-        return (distanceToStart + distanceToEnd >= lineLength - buffer) && 
-               (distanceToStart + distanceToEnd <= lineLength + buffer);
-      }
-      return false;
-    });
-
-    if (clickedLine) {
-      selectedObjects = [clickedLine];
-      updateToolDetails();
-      redrawCanvas();
-    } else {
-      // Bestaande code voor selectie van SVG's of het starten van een selectie-vak
-      const clickedObject = drawnObjects.find((obj) => {
+        const buffer = 5;
+        return (
+          distanceToStart + distanceToEnd >= lineLength - buffer &&
+          distanceToStart + distanceToEnd <= lineLength + buffer
+        );
+      } else if (obj.type === "curve") {
+        const buffer = 5;
+        for (let i = 0; i < obj.points.length - 1; i++) {
+          const pointA = obj.points[i];
+          const pointB = obj.points[i + 1];
+          const distance = pointToSegmentDistance(x, y, pointA, pointB);
+          if (distance <= buffer) {
+            return true;
+          }
+        }
+        return false;
+      } else if (obj.type === "svg") {
         return (
           x >= obj.x - obj.scaledWidth / 2 &&
           x <= obj.x + obj.scaledWidth / 2 &&
           y >= obj.y - obj.scaledHeight / 2 &&
           y <= obj.y + obj.scaledHeight / 2
         );
-      });
-
-      if (clickedObject) {
-        if (!selectedObjects.includes(clickedObject)) {
-          selectedObjects = [clickedObject];
-        }
-        saveHistory(); // Sla de huidige staat op voordat er wordt gesleept
-        isDragging = true;
-        dragStart = { x, y };
-        initialPositions = selectedObjects.map((obj) => ({
-          obj: obj,
-          startX: obj.x,
-          startY: obj.y,
-        }));
-      } else {
-        // Start een selectie-vak
-        isSelecting = true;
-        selectionStart = { x, y };
-        selectionBox = { x, y, width: 0, height: 0 };
-        selectedObjects = [];
       }
+      return false;
+    });
 
+    if (clickedObject) {
+      if (!selectedObjects.includes(clickedObject)) {
+        selectedObjects.push(clickedObject);
+      }
+      dragStart = { x, y };  // Opslaan van startpunt voor slepen
+      isDragging = true;  // Start het slepen
       updateToolDetails();
+      redrawCanvas();
+    } else {
+      isSelecting = true;
+      selectionStart = { x, y };
+      selectionBox = { x, y, width: 0, height: 0 };
+      selectedObjects = [];
     }
   }
 });
 
 
-
-// **Object Verslepen of Meervoudige Selectie**
 canvas.addEventListener("mousemove", (e) => {
-  if (isDragging && selectedObjects.length > 0) {
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
 
-    // Bereken de relatieve verplaatsing ten opzichte van de vorige positie
+  if (isDragging && selectedObjects.length > 0) {
+    // Bereken de verplaatsing
     const dx = x - dragStart.x;
     const dy = y - dragStart.y;
 
     // Pas de verplaatsing toe op elk geselecteerd object
     selectedObjects.forEach((obj) => {
-      obj.x += dx;
-      obj.y += dy;
+      if (obj.type === "svg") {
+        obj.x += dx;
+        obj.y += dy;
+      } else if (obj.type === "line") {
+        obj.startX += dx;
+        obj.startY += dy;
+        obj.endX += dx;
+        obj.endY += dy;
+      } else if (obj.type === "curve") {
+        obj.points.forEach((point) => {
+          point.x += dx;
+          point.y += dy;
+        });
+      }
     });
 
-    // Update de startpositie voor de volgende `mousemove` event
+    // Update de startpositie voor de volgende verplaatsing
     dragStart = { x, y };
 
-    // Herteken het canvas
+    redrawCanvas(); // Herteken het canvas om de wijzigingen weer te geven
+  } else if (isDrawingLine) {
     redrawCanvas();
+    // Teken visuele preview van de lijn
+    ctx.strokeStyle = "#888";
+    ctx.lineWidth = 2;
+    ctx.setLineDash([5, 5]);
+    ctx.beginPath();
+    ctx.moveTo(lineStart.x, lineStart.y);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  } else if (isDrawingCurve && currentTool && currentTool.id === "curve") {
+    redrawCanvas();
+    // Teken visuele preview van de curve
+    ctx.strokeStyle = "#888";
+    ctx.lineWidth = 2;
+    ctx.setLineDash([5, 5]);
+    ctx.beginPath();
+    ctx.moveTo(curvePoints[0].x, curvePoints[0].y);
+    for (let i = 1; i < curvePoints.length; i++) {
+      ctx.lineTo(curvePoints[i].x, curvePoints[i].y);
+    }
+    ctx.lineTo(x, y); // Voeg het huidige punt toe als visuele preview
+    ctx.stroke();
+    ctx.setLineDash([]);
   } else if (isSelecting) {
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    // Update het selectiegebied
     selectionBox.width = x - selectionStart.x;
     selectionBox.height = y - selectionStart.y;
     redrawCanvas();
-
-    // Teken de selectie-vak
+    // Teken het selectievak
     ctx.strokeStyle = "red";
     ctx.lineWidth = 1;
     ctx.setLineDash([5, 3]);
     ctx.strokeRect(selectionStart.x, selectionStart.y, selectionBox.width, selectionBox.height);
     ctx.setLineDash([]);
 
-    // Update de geselecteerde objecten op basis van het selectiegebied
+    // Update geselecteerde objecten op basis van het selectiegebied
     selectedObjects = drawnObjects.filter((obj) => {
-      if (obj.type === "line") {
-        return isLineInSelectionBox(obj, selectionStart, selectionBox);
+      if (obj.type === "line" || obj.type === "curve") {
+        return isLineOrCurveInSelectionBox(obj, selectionStart, selectionBox);
       } else {
         return (
           obj.x >= Math.min(selectionStart.x, selectionStart.x + selectionBox.width) &&
@@ -568,17 +665,12 @@ canvas.addEventListener("mousemove", (e) => {
 });
 
 
-// **Einde Slepen of Selectie**
 canvas.addEventListener("mouseup", (e) => {
-  if (isDrawingLine && lineStart) {
+  if (isDrawingLine) {
     const rect = canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-
-    // Sla de huidige staat op voordat de lijn wordt toegevoegd
     saveHistory();
-
-    // Voeg de lijn toe aan de lijst van getekende objecten
     drawnObjects.push({
       type: "line",
       startX: lineStart.x,
@@ -586,98 +678,299 @@ canvas.addEventListener("mouseup", (e) => {
       endX: x,
       endY: y,
       isDashed: isDashedLine,
+      color: "#000000",
+      lineWidth: 2,
     });
-
-    // Stop met tekenen van de lijn
     isDrawingLine = false;
-    lineStart = null;
-
-    // Herteken het canvas om de nieuwe lijn weer te geven
-    redrawCanvas();
-  }
-
-  if (isDragging) {
-    isDragging = false;
-    dragStart = null;
-    initialPositions = [];
-  }
-
-  if (isSelecting) {
-    isSelecting = false;
-    selectionBox = null;
-    redrawCanvas();
-  }
-});
-
-
-// **Object Verwijderen**
-document.addEventListener("keydown", (e) => {
-  if (e.key === "Backspace" && selectedObjects.length > 0) {
-    drawnObjects = drawnObjects.filter((obj) => !selectedObjects.includes(obj));
-    selectedObjects = [];
     updateToolDetails();
     redrawCanvas();
-    e.preventDefault(); // Voorkom browseractie bij Backspace
+  } else if (isDragging) {
+    isDragging = false; // Stop het slepen
+    dragStart = null; // Reset het startpunt voor slepen
+    saveHistory(); // Sla de huidige staat op
+  } else if (isSelecting) {
+    isSelecting = false;
+    selectionBox = null;
+    updateToolDetails();
+    redrawCanvas();
   }
 });
 
-// **Tools Details Updaten**
+canvas.addEventListener("dblclick", (e) => {
+  if (isDrawingCurve && currentTool && currentTool.id === "curve") {
+    saveHistory();
+    drawnObjects.push({
+      type: "curve",
+      points: [...curvePoints],
+      isDashed: isDashedLine,
+      lineWidth: 2,
+      color: "#000000",
+    });
+    isDrawingCurve = false;
+    curvePoints = [];
+    updateToolDetails();
+    redrawCanvas();
+  }
+});
+
+// Hulpfunctie om de afstand tussen een punt en een lijnsegment te berekenen
+function pointToSegmentDistance(px, py, pointA, pointB) {
+  const x1 = pointA.x;
+  const y1 = pointA.y;
+  const x2 = pointB.x;
+  const y2 = pointB.y;
+  const A = px - x1;
+  const B = py - y1;
+  const C = x2 - x1;
+  const D = y2 - y1;
+
+  const dot = A * C + B * D;
+  const len_sq = C * C + D * D;
+  let param = -1;
+  if (len_sq !== 0) {
+    param = dot / len_sq;
+  }
+
+  let xx, yy;
+
+  if (param < 0) {
+    xx = x1;
+    yy = y1;
+  } else if (param > 1) {
+    xx = x2;
+    yy = y2;
+  } else {
+    xx = x1 + param * C;
+    yy = y1 + param * D;
+  }
+
+  const dx = px - xx;
+  const dy = py - yy;
+  return Math.sqrt(dx * dx + dy * dy);
+}
+
+function isLineOrCurveInSelectionBox(lineOrCurve, selectionStart, selectionBox) {
+  const minX = Math.min(selectionStart.x, selectionStart.x + selectionBox.width);
+  const maxX = Math.max(selectionStart.x, selectionStart.x + selectionBox.width);
+  const minY = Math.min(selectionStart.y, selectionStart.y + selectionBox.height);
+  const maxY = Math.max(selectionStart.y, selectionStart.y + selectionBox.height);
+
+  if (lineOrCurve.type === "line") {
+    return (
+      (lineOrCurve.startX >= minX && lineOrCurve.startX <= maxX && lineOrCurve.startY >= minY && lineOrCurve.startY <= maxY) ||
+      (lineOrCurve.endX >= minX && lineOrCurve.endX <= maxX && lineOrCurve.endY >= minY && lineOrCurve.endY <= maxY)
+    );
+  } else if (lineOrCurve.type === "curve") {
+    for (let i = 0; i < lineOrCurve.points.length; i++) {
+      const point = lineOrCurve.points[i];
+      if (point.x >= minX && point.x <= maxX && point.y >= minY && point.y <= maxY) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+// Functie om de details van de geselecteerde tool bij te werken
+// Functie om de details van de geselecteerde tool bij te werken
 function updateToolDetails() {
   const details = document.getElementById("toolDetails");
 
   if (selectedObjects.length === 1) {
     const selectedObject = selectedObjects[0];
 
-    if (selectedObject.type === "line") {
+    if (selectedObject.type === "line" || selectedObject.type === "curve") {
       details.innerHTML = `
-        <label for="dashedLineCheckbox">Stippellijn:</label>
-        <input id="dashedLineCheckbox" type="checkbox" ${selectedObject.isDashed ? "checked" : ""} />
-      `;
+              <label for="dashedLineCheckbox">Stippellijn:</label>
+              <input id="dashedLineCheckbox" type="checkbox" ${selectedObject.isDashed ? "checked" : ""} />
+              <label for="lineWidthInput">Lijnbreedte:</label>
+              <input id="lineWidthInput" type="number" value="${selectedObject.lineWidth}" min="1" max="10" />
+              <label for="lineColorPicker">Kleur:</label>
+              <input id="lineColorPicker" type="color" value="${selectedObject.color || "#000000"}" />
+          `;
 
       document.getElementById("dashedLineCheckbox").addEventListener("change", (e) => {
         selectedObject.isDashed = e.target.checked;
         redrawCanvas();
       });
+
+      document.getElementById("lineWidthInput").addEventListener("input", (e) => {
+        selectedObject.lineWidth = parseInt(e.target.value, 10);
+        redrawCanvas();
+      });
+
+      document.getElementById("lineColorPicker").addEventListener("input", (e) => {
+        selectedObject.color = e.target.value;
+        redrawCanvas();
+      });
     } else if (selectedObject.type === "svg") {
-      const matchingObject = availableObjects.find((obj) =>
-        selectedObject.id.startsWith(obj.id)
-      );
-
-      if (!matchingObject) {
-        details.innerHTML = "<p>Geen selectie</p>";
-        return;
-      }
-
-      const resizable = matchingObject.resizable;
-
       details.innerHTML = `
-        <label for="colorPicker">Kleur:</label>
-        <input id="colorPicker" type="color" value="${selectedObject.color}" />
-        ${resizable ? `
-          <label for="sizeInput">Grootte:</label>
-          <input id="sizeInput" type="number" value="${selectedObject.size}" />
-        ` : ""}
-      `;
+              <label for="colorPicker">Kleur:</label>
+              <input id="colorPicker" type="color" value="${selectedObject.color}" />
+          `;
 
       document.getElementById("colorPicker").addEventListener("input", (e) => {
         selectedObject.color = e.target.value;
         redrawCanvas();
       });
-
-      if (resizable) {
-        document.getElementById("sizeInput").addEventListener("input", (e) => {
-          selectedObject.size = parseInt(e.target.value, 10);
-          redrawCanvas();
-        });
-      }
     }
+  } else if (selectedObjects.length > 1) {
+    details.innerHTML = `
+          <p>Meerdere objecten geselecteerd</p>
+          <button id="alignLeftButton" class="align-button">
+              <img src="img/icons/align-left.svg" alt="Uitlijnen Links" title="Uitlijnen Links" />
+          </button>
+          <button id="alignRightButton" class="align-button">
+              <img src="img/icons/align-right.svg" alt="Uitlijnen Rechts" title="Uitlijnen Rechts" />
+          </button>
+          <button id="alignTopButton" class="align-button">
+              <img src="img/icons/align-top.svg" alt="Uitlijnen Boven" title="Uitlijnen Boven" />
+          </button>
+          <button id="alignBottomButton" class="align-button">
+              <img src="img/icons/align-bottom.svg" alt="Uitlijnen Onder" title="Uitlijnen Onder" />
+          </button>
+          <button id="alignCenterButton" class="align-button">
+              <img src="img/icons/align-center.svg" alt="Horizontaal Centreren" title="Horizontaal Centreren" />
+          </button>
+      `;
+
+    document.getElementById("alignLeftButton").addEventListener("click", () => alignSelectedObjects("left"));
+    document.getElementById("alignRightButton").addEventListener("click", () => alignSelectedObjects("right"));
+    document.getElementById("alignTopButton").addEventListener("click", () => alignSelectedObjects("top"));
+    document.getElementById("alignBottomButton").addEventListener("click", () => alignSelectedObjects("bottom"));
+    document.getElementById("alignCenterButton").addEventListener("click", () => alignSelectedObjects("center"));
   } else {
-    details.innerHTML = "<p>Meerdere objecten geselecteerd</p>";
+    details.innerHTML = "<p>Geen selectie</p>";
   }
 }
+
+// Functie voor het uitlijnen van geselecteerde objecten
+function alignSelectedObjects(alignment) {
+  if (selectedObjects.length < 2) return;
+
+  // Bereken de minimale en maximale posities van de geselecteerde objecten
+  let minX = Math.min(...selectedObjects.map(obj => obj.type === "line" || obj.type === "curve" ? Math.min(obj.startX, ...(obj.points || []).map(p => p.x)) : obj.x));
+  let maxX = Math.max(...selectedObjects.map(obj => obj.type === "line" || obj.type === "curve" ? Math.max(obj.endX, ...(obj.points || []).map(p => p.x)) : obj.x));
+  let minY = Math.min(...selectedObjects.map(obj => obj.type === "line" || obj.type === "curve" ? Math.min(obj.startY, ...(obj.points || []).map(p => p.y)) : obj.y));
+  let maxY = Math.max(...selectedObjects.map(obj => obj.type === "line" || obj.type === "curve" ? Math.max(obj.endY, ...(obj.points || []).map(p => p.y)) : obj.y));
+
+  selectedObjects.forEach((obj) => {
+    switch (alignment) {
+      case "left":
+        if (obj.type === "svg") {
+          obj.x = minX;
+        } else if (obj.type === "line" || obj.type === "curve") {
+          const dx = minX - Math.min(obj.startX, ...(obj.points || []).map(p => p.x));
+          obj.startX += dx;
+          obj.endX += dx;
+          if (obj.points) {
+            obj.points.forEach(p => p.x += dx);
+          }
+        }
+        break;
+      case "right":
+        if (obj.type === "svg") {
+          obj.x = maxX;
+        } else if (obj.type === "line" || obj.type === "curve") {
+          const dx = maxX - Math.max(obj.endX, ...(obj.points || []).map(p => p.x));
+          obj.startX += dx;
+          obj.endX += dx;
+          if (obj.points) {
+            obj.points.forEach(p => p.x += dx);
+          }
+        }
+        break;
+      case "top":
+        if (obj.type === "svg") {
+          obj.y = minY;
+        } else if (obj.type === "line" || obj.type === "curve") {
+          const dy = minY - Math.min(obj.startY, ...(obj.points || []).map(p => p.y));
+          obj.startY += dy;
+          obj.endY += dy;
+          if (obj.points) {
+            obj.points.forEach(p => p.y += dy);
+          }
+        }
+        break;
+      case "bottom":
+        if (obj.type === "svg") {
+          obj.y = maxY;
+        } else if (obj.type === "line" || obj.type === "curve") {
+          const dy = maxY - Math.max(obj.endY, ...(obj.points || []).map(p => p.y));
+          obj.startY += dy;
+          obj.endY += dy;
+          if (obj.points) {
+            obj.points.forEach(p => p.y += dy);
+          }
+        }
+        break;
+      case "center":
+        if (obj.type === "svg") {
+          obj.x = (minX + maxX) / 2;
+        } else if (obj.type === "line" || obj.type === "curve") {
+          const dx = (minX + maxX) / 2 - (obj.startX + obj.endX) / 2;
+          obj.startX += dx;
+          obj.endX += dx;
+          if (obj.points) {
+            obj.points.forEach(p => p.x += dx);
+          }
+        }
+        break;
+    }
+  });
+
+  // Herteken het canvas na het uitlijnen
+  redrawCanvas();
+}
+// **Object Verwijderen**
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Backspace" && selectedObjects.length > 0) {
+    drawnObjects = drawnObjects.filter((obj) => !selectedObjects.includes(obj));
+    selectedObjects = [];
+    redrawCanvas();
+    e.preventDefault();
+  }
+});
+
 
 // **Initialisatie**
 document.addEventListener("DOMContentLoaded", () => {
   generateToolbar();
   loadBackground(defaultBackground); // Laad de default achtergrond bij laden van de pagina
 });
+
+// **Helperfunctie voor afstand berekenen**
+function pointToSegmentDistance(px, py, pointA, pointB) {
+  const x1 = pointA.x;
+  const y1 = pointA.y;
+  const x2 = pointB.x;
+  const y2 = pointB.y;
+  const A = px - x1;
+  const B = py - y1;
+  const C = x2 - x1;
+  const D = y2 - y1;
+
+  const dot = A * C + B * D;
+  const len_sq = C * C + D * D;
+  let param = -1;
+  if (len_sq !== 0) {
+    param = dot / len_sq;
+  }
+
+  let xx, yy;
+
+  if (param < 0) {
+    xx = x1;
+    yy = y1;
+  } else if (param > 1) {
+    xx = x2;
+    yy = y2;
+  } else {
+    xx = x1 + param * C;
+    yy = y1 + param * D;
+  }
+
+  const dx = px - xx;
+  const dy = py - yy;
+  return Math.sqrt(dx * dx + dy * dy);
+}

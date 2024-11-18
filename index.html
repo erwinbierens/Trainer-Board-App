@@ -6,33 +6,56 @@
   <title>Trainer App</title>
   <link rel="stylesheet" href="styles.css">
   <script src="https://cdn.jsdelivr.net/npm/lodash/lodash.min.js"></script> <!-- Lodash toegevoegd -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
 </head>
 <body>
   <div class="app-container">
     <header class="top-menu">
-        <button onclick="newCanvas()">Nieuw Canvas</button>
-        <button onclick="setBackground()">Selecteer</button>
-      <button onclick="saveAsPNG()">Opslaan als PNG</button>
-            <button onclick="saveAsPDF()">Opslaan als PDF</button>
+      <div class="left-icons">
+        <button onclick="newCanvas()" class="toolbar-button">
+          <img src="img/icons/document-new.svg" alt="Nieuw Canvas" title="Nieuw Canvas">
+        </button>
+        <button onclick="setBackground()" class="toolbar-button">
+          <img src="img/icons/settings.svg" alt="Selecteer" title="Selecteer">
+        </button>
+      </div>
+      <div class="right-icons">
+        <button onclick="saveAsPNG()" class="toolbar-button">
+          <img src="img/icons/document-png.svg" alt="Opslaan als PNG" title="Opslaan als PNG">
+        </button>
+        <button onclick="saveAsPDF()" class="toolbar-button">
+          <img src="img/icons/document-pdf.svg" alt="Opslaan als PDF" title="Opslaan als PDF">
+        </button>
+        <button onclick="importFile()" class="toolbar-button">
+          <img src="img/icons/import.svg" alt="Importeren" title="Importeren">
+        </button>
+        <button onclick="exportFile()" class="toolbar-button">
+          <img src="img/icons/export.svg" alt="Exporteren" title="Exporteren">
+        </button>
+      </div>
     </header>
 
     <div class="main-layout">
-
-        <div id="backgroundPopup" class="popup" style="display: none;">
-      <div class="popup-content">
-        <h3>Kies een Achtergrond</h3>
-        <select id="backgroundSelector"></select>
-        <button onclick="setBackground()">Bevestigen</button>
-        <button onclick="closeBackgroundPopup()">Sluiten</button>
+      <div id="backgroundPopup" class="popup" style="display: none;">
+        <div class="popup-content">
+          <h3>Kies een Achtergrond</h3>
+          <select id="backgroundSelector"></select>
+          <button onclick="setBackground()">Bevestigen</button>
+          <button onclick="closeBackgroundPopup()">Sluiten</button>
+        </div>
       </div>
-    </div>
 
       <aside class="toolbar">
         <h3>Tools</h3>
-        <button onclick="selectTool('pion')">Pion</button>
-        <button onclick="selectTool('goal')">Goal</button>
-        <button onclick="selectTool('text')">Tekst</button>
+        <button onclick="selectTool('pion')" class="toolbar-button">
+          <img src="img/icons/pion.svg" alt="Pion" title="Pion">
+        </button>
+        <button onclick="selectTool('goal')" class="toolbar-button">
+          <img src="img/icons/goal.svg" alt="Goal" title="Goal">
+        </button>
+        <button onclick="selectTool('text')" class="toolbar-button">
+          <img src="img/icons/text.svg" alt="Tekst" title="Tekst">
+        </button>
       </aside>
 
       <main class="canvas-container">
@@ -48,7 +71,7 @@
     </div>
   </div>
   <script src="background.js"></script>
-<script src="object.js"></script>
+  <script src="object.js"></script>
   <script src="scripts.js"></script> <!-- Je aangepaste script -->
 </body>
 </html>
