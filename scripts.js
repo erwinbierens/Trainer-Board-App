@@ -269,7 +269,7 @@ function generateToolbar() {
   // Voeg een knop toe voor de selectietool (handje)
   const selectButton = document.createElement("button");
   selectButton.classList.add("toolbar-button");
-  selectButton.innerHTML = `
+  selectButton.innerHTML = `</br></br>
   <img src="img/icons/select.svg" alt="Select" title="Selecttool" width="24" height="24">
 `;
   selectButton.title = "Selecteer en verplaats objecten";

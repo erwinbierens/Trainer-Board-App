@@ -39,13 +39,6 @@ const availableObjects = [
         resizable: true, // Grootte kan worden aangepast
       },
       {
-        id: "ladder",
-        label: "Ladder",
-        sizePercentage: 100,
-        svgPath: "img/ladder.svg",
-        resizable: true, // Grootte kan worden aangepast
-      },
-      {
         id: "hoedje",
         label: "Hoedje",
         sizePercentage: 100,
@@ -53,10 +46,52 @@ const availableObjects = [
         resizable: true, // Grootte kan worden aangepast
       },
       {
+        id: "hoedje-rood",
+        label: "Hoedje Rood",
+        sizePercentage: 100,
+        svgPath: "img/material/hoedje-rood.svg",
+        resizable: true, // Grootte kan worden aangepast
+      },
+      {
+        id: "hoedje-geel",
+        label: "Hoedje Geel",
+        sizePercentage: 100,
+        svgPath: "img/material/hoedje-geel.svg",
+        resizable: true, // Grootte kan worden aangepast
+      },
+      {
+        id: "hoedje-blauw",
+        label: "Hoedje Blauw",
+        sizePercentage: 100,
+        svgPath: "img/material/hoedje-blauw.svg",
+        resizable: true, // Grootte kan worden aangepast
+      },
+      {
         id: "pion",
         label: "Pion",
         sizePercentage: 100,
         svgPath: "img/material/pion.svg",
+        resizable: true, // Grootte kan worden aangepast
+      },
+      {
+        id: "pion-rood",
+        label: "Pion Rood",
+        sizePercentage: 100,
+        svgPath: "img/material/pion-rood.svg",
+        resizable: true, // Grootte kan worden aangepast
+      },
+      {
+        id: "pion-geel",
+        label: "Pion Geel",
+        sizePercentage: 100,
+        svgPath: "img/material/pion-geel.svg",
+        resizable: true, // Grootte kan worden aangepast
+      },
+      {
+        id: "pion-blauw",
+        label: "Pion Blauw",
+        sizePercentage: 100,
+        svgPath: "img/material/pion-blauw.svg",
         resizable: true, // Grootte kan worden aangepast
       },
       {

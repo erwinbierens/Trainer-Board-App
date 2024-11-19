@@ -1,4 +1,4 @@
-# Trainer Board App
+# TrainerBoard
 
  Easily create your soccer workouts via the web app. This makes it simple to prepare soccer workouts and lay out your field. 
 
