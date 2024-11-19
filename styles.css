@@ -51,21 +51,22 @@ button:hover {
   flex: 1;
 }
 
-.toolbar, .toolbox {
+.toolbar {
   width: 200px;
-  padding: 10px;
+  padding: 5px; /* Verlaag de padding om meer ruimte voor de iconen te creëren */
   background: #444;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* Maximaal 3 knoppen naast elkaar */
+  gap: 1px; /* Verlaagde ruimte tussen knoppen voor compacter uiterlijk */
+  justify-items: center;
+  align-items: center;
 }
 
 .toolbar-button {
-  width: 40px;
-  height: 40px;
+  width: 60px; /* Maak de knoppen iets kleiner */
+  height: 60px; /* Maak de knoppen iets kleiner */
   background: #555;
-  border-radius: 5px;
+  border-radius: 5px; /* Verlaag de afronding van de knoppen */
   transition: background 0.3s;
   display: flex;
   align-items: center;
@@ -73,13 +74,14 @@ button:hover {
 }
 
 .toolbar-button img {
-  width: 24px;
-  height: 24px;
+  width: 32px; /* Grotere icoonbreedte om de knoppen aantrekkelijker te maken */
+  height: 32px; /* Grotere icoonhoogte om de knoppen aantrekkelijker te maken */
 }
 
 .toolbar-button:hover {
   background: #666;
 }
+
 
 .canvas-container {
   flex: 1;
