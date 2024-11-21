@@ -491,7 +491,6 @@ function redrawCanvas() {
   });
 }
 
-
 // Functie om een pijl te tekenen aan het einde van een lijn of curve
 function drawArrow(context, fromX, fromY, toX, toY) {
   const headLength = 10; // Lengte van de pijlpunt
@@ -974,3 +973,4 @@ function pointToSegmentDistance(px, py, pointA, pointB) {
   const dy = py - yy;
   return Math.sqrt(dx * dx + dy * dy);
 }
+
