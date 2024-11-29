@@ -45,7 +45,6 @@ function saveHistory() {
     history.shift();
   }
 }
-
 // **Undo Functionaliteit**
 function undo() {
   if (history.length > 0) {
@@ -53,7 +52,6 @@ function undo() {
     redrawCanvas();
   }
 }
-
 function saveAsPNG() {
   const link = document.createElement("a");
   // Maak een tijdelijk canvas om een PNG-afbeelding te maken
@@ -103,7 +101,6 @@ function saveAsPNG() {
   link.download = "training.png";
   link.click();
 }
-
 function saveAsPDF() {
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF({ orientation: 'landscape' });
@@ -155,7 +152,6 @@ function saveAsPDF() {
   // Save the PDF
   pdf.save("training.pdf");
 }
-
 function newCanvas() {
   generateBackgroundSelector(); // Generate the available backgrounds
   const popup = document.getElementById("backgroundPopup");
@@ -165,14 +161,60 @@ function newCanvas() {
     console.error("Popup element 'backgroundPopup' not found");
   }
 }
+function importFile() {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = "application/json";
+  input.onchange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
 
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const importedData = JSON.parse(e.target.result);
+        if (importedData && Array.isArray(importedData.objects)) {
+          drawnObjects = importedData.objects;
+          if (importedData.background) {
+            loadBackground(importedData.background, () => {
+              redrawCanvas();
+            });
+          } else {
+            redrawCanvas();
+          }
+        } else {
+          console.error("Invalid file format");
+        }
+      } catch (error) {
+        console.error("Error parsing JSON file:", error);
+      }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+function exportFile() {
+  const exportData = {
+    background: staticBackground ? staticBackground.src : null,
+    objects: drawnObjects
+  };
+  const dataStr = JSON.stringify(exportData, null, 2);
+  const blob = new Blob([dataStr], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "canvas_export.json";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
 function closeBackgroundPopup() {
   const popup = document.getElementById("backgroundPopup");
   if (popup) {
     popup.style.display = "none"; // Hide the popup
   }
 }
-
 function generateBackgroundSelector() {
   const popup = document.getElementById("backgroundPopup");
   const selector = document.getElementById("backgroundSelector");
@@ -193,7 +235,6 @@ function generateBackgroundSelector() {
 
   popup.style.display = "block"; // Toon de popup voor achtergrondselectie
 }
-
 function setBackground() {
   const selector = document.getElementById("backgroundSelector");
   const selectedValue = selector ? selector.value : null;
@@ -212,30 +253,19 @@ function setBackground() {
     popup.style.display = "none";
   }
 }
-
-function loadBackground(file) {
+function loadBackground(file, callback) {
   console.log("Laadt achtergrond:", file);
-  fetch(file)
-    .then((response) => response.text())
-    .then((svgText) => {
-      const img = new Image();
-      const svgBlob = new Blob([svgText], { type: "image/svg+xml" });
-      const url = URL.createObjectURL(svgBlob);
-
-      img.onload = () => {
-        staticBackground = img;
-        drawnObjects = []; // Wis bestaande objecten
-        selectedObjects = []; // Wis selectie
-        redrawCanvas(); // Herteken canvas
-        console.log("Achtergrond geladen en canvas bijgewerkt.");
-        URL.revokeObjectURL(url);
-      };
-
-      img.src = url;
-    })
-    .catch((error) => console.error("Fout bij het laden van de achtergrond:", error));
+  const img = new Image();
+  img.onload = () => {
+    staticBackground = img;
+    drawnObjects = []; // Wis bestaande objecten
+    selectedObjects = []; // Wis selectie
+    redrawCanvas(); // Herteken canvas
+    console.log("Achtergrond geladen en canvas bijgewerkt.");
+    if (callback) callback();
+  };
+  img.src = file;
 }
-
 // **SVG Laden en Cachen**
 function loadSvgToCache(svgPath, callback) {
   if (svgCache.has(svgPath)) {
@@ -286,14 +316,12 @@ function loadSvgToCache(svgPath, callback) {
     })
     .catch((error) => console.error("Fout bij het laden van SVG:", error));
 }
-
-
 // **Dynamisch Tools Genereren**
 function generateToolbar() {
   const toolbar = document.querySelector(".toolbar");
   toolbar.innerHTML = "<h3>Tools</h3><br>";
 
-  // Voeg een knop toe voor de selectietool (handje)
+ // Voeg een knop toe voor de selectietool (handje)
   const selectButton = document.createElement("button");
   selectButton.classList.add("toolbar-button");
   selectButton.innerHTML = `</br></br>
@@ -400,54 +428,6 @@ function generateToolbar() {
     toolbar.appendChild(button);
   });
 }
-
-// **Object Plaatsen**
-canvas.addEventListener("click", (e) => {
-  if (selectMode || !currentTool) return;
-
-  const rect = canvas.getBoundingClientRect();
-  const x = e.clientX - rect.left;
-  const y = e.clientY - rect.top;
-
-  loadSvgToCache(currentTool.svgPath, ({ img, width, height }) => {
-    let sizeFactor;
-
-    // Controleer of de grootte als percentage is gedefinieerd
-    if (typeof currentTool.sizePercentage === "number") {
-      sizeFactor = (currentTool.sizePercentage / 100);
-    } else {
-      console.error("sizePercentage is niet gedefinieerd voor het object.");
-      return;
-    }
-
-    const aspectRatio = width / height;
-
-    // Adjust scaledWidth based on canvas size
-    const baseScale = canvas.width / Math.min(canvas.width, canvas.height);
-    const scaledWidth = width * sizeFactor * baseScale;
-
-    // Calculate scaledHeight using the aspect ratio
-    const scaledHeight = scaledWidth / aspectRatio;
-
-    saveHistory(); // Sla de huidige staat op voordat er een nieuw object wordt toegevoegd
-
-    drawnObjects.push({
-      id: `${currentTool.id}_${Date.now()}`,
-      type: "svg",
-      x,
-      y,
-      width,
-      height,
-      sizePercentage: currentTool.sizePercentage,
-      scaledWidth,
-      scaledHeight,
-      svg: img,
-      color: "#000000",
-    });
-    redrawCanvas();
-  });
-});
-
 function isLineInSelectionBox(line, selectionStart, selectionBox) {
   const { startX, startY, endX, endY } = line;
 
@@ -463,7 +443,12 @@ function isLineInSelectionBox(line, selectionStart, selectionBox) {
     (endX >= minX && endX <= maxX && endY >= minY && endY <= maxY)
   );
 }
-
+function selectAllObjects() {
+  selectedObjects = [...drawnObjects];
+  updateToolDetails();
+  redrawCanvas();
+}
+// Show canvas
 function redrawCanvas() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -485,14 +470,45 @@ function redrawCanvas() {
       ctx.stroke();
       ctx.setLineDash([]);
       drawArrow(ctx, obj.startX, obj.startY, obj.endX, obj.endY);
+    } else if (obj.type === "zigzag") {
+      // Render Zigzag Line
+      ctx.strokeStyle = obj.color || "black";
+      ctx.lineWidth = obj.lineWidth || 2;
+      ctx.beginPath();
+      ctx.moveTo(obj.points[0].x, obj.points[0].y);
+      obj.points.forEach((point) => {
+        ctx.lineTo(point.x, point.y);
+      });
+      ctx.stroke();
+      // Draw arrow at the end of the zigzag line
+      const lastPointIndex = obj.points.length - 1;
+      if (lastPointIndex > 0) {
+        drawArrow(ctx, obj.points[lastPointIndex - 1].x, obj.points[lastPointIndex - 1].y, obj.points[lastPointIndex].x, obj.points[lastPointIndex].y);
+      }
+    } else if (obj.type === "curve") {
+      // Render Curve
+      ctx.strokeStyle = obj.color || "black";
+      ctx.lineWidth = obj.lineWidth || 2;
+      ctx.setLineDash(obj.isDashed ? [5, 5] : []);
+      ctx.beginPath();
+      ctx.moveTo(obj.points[0].x, obj.points[0].y);
+      for (let i = 1; i < obj.points.length; i++) {
+        const cp = obj.points[i];
+        const prev = obj.points[i - 1];
+        const midX = (prev.x + cp.x) / 2;
+        const midY = (prev.y + cp.y) / 2;
+        ctx.quadraticCurveTo(prev.x, prev.y, midX, midY);
+      }
+      ctx.quadraticCurveTo(obj.points[obj.points.length - 1].x, obj.points[obj.points.length - 1].y, obj.points[obj.points.length - 1].x, obj.points[obj.points.length - 1].y);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      // Draw arrow at the end of the curve
+      const lastPointIndex = obj.points.length - 1;
+      if (lastPointIndex > 0) {
+        drawArrow(ctx, obj.points[lastPointIndex - 1].x, obj.points[lastPointIndex - 1].y, obj.points[lastPointIndex].x, obj.points[lastPointIndex].y);
+      }
     } else if (obj.type === "svg") {
       // Render SVG
-      if (!obj.scaledWidth || !obj.scaledHeight) {
-        const aspectRatio = obj.width / obj.height;
-        const sizeFactor = obj.sizePercentage / 100;
-        obj.scaledWidth = obj.width * sizeFactor;
-        obj.scaledHeight = obj.scaledWidth / aspectRatio;
-      }
       ctx.drawImage(
         obj.svg,
         obj.x - obj.scaledWidth / 2,
@@ -514,6 +530,25 @@ function redrawCanvas() {
       ctx.moveTo(obj.startX, obj.startY);
       ctx.lineTo(obj.endX, obj.endY);
       ctx.stroke();
+    } else if (obj.type === "zigzag") {
+      ctx.beginPath();
+      ctx.moveTo(obj.points[0].x, obj.points[0].y);
+      obj.points.forEach((point) => {
+        ctx.lineTo(point.x, point.y);
+      });
+      ctx.stroke();
+    } else if (obj.type === "curve") {
+      ctx.beginPath();
+      ctx.moveTo(obj.points[0].x, obj.points[0].y);
+      for (let i = 1; i < obj.points.length; i++) {
+        const cp = obj.points[i];
+        const prev = obj.points[i - 1];
+        const midX = (prev.x + cp.x) / 2;
+        const midY = (prev.y + cp.y) / 2;
+        ctx.quadraticCurveTo(prev.x, prev.y, midX, midY);
+      }
+      ctx.quadraticCurveTo(obj.points[obj.points.length - 1].x, obj.points[obj.points.length - 1].y, obj.points[obj.points.length - 1].x, obj.points[obj.points.length - 1].y);
+      ctx.stroke();
     } else if (obj.type === "svg") {
       ctx.strokeRect(
         obj.x - obj.scaledWidth / 2,
@@ -526,11 +561,9 @@ function redrawCanvas() {
     ctx.setLineDash([]);
   });
 }
-
-
 // Functie om een pijl te tekenen aan het einde van een lijn of curve
 function drawArrow(context, fromX, fromY, toX, toY) {
-  const headLength = 10; // Lengte van de pijlpunt
+  const headLength = 10; // Length of the arrowhead
   const angle = Math.atan2(toY - fromY, toX - fromX);
   context.beginPath();
   context.moveTo(toX, toY);
@@ -547,343 +580,6 @@ function drawArrow(context, fromX, fromY, toX, toY) {
   context.fillStyle = context.strokeStyle;
   context.fill();
 }
-
-// Mouse event listeners voor interactie
-// Mouse event listeners voor interactie
-canvas.addEventListener("mousedown", (e) => {
-  const rect = canvas.getBoundingClientRect();
-  const x = e.clientX - rect.left;
-  const y = e.clientY - rect.top;
-  const sizeFactor = currentTool.sizePercentage / 100;
-  const scaledWidth = width * sizeFactor;
-  const scaledHeight = scaledWidth / aspectRatio;
-
-  if (currentTool && currentTool.id === "curve") {
-    if (!isDrawingCurve) {
-      isDrawingCurve = true;
-      curvePoints = [{ x, y }];
-    } else {
-      curvePoints.push({ x, y });
-    }
-    redrawCanvas();
-  } else if (currentTool && currentTool.id === "line") {
-    isDrawingLine = true;
-    lineStart = { x, y };
-  } else if (currentTool && currentTool.id === "zigzag") {
-    isDrawingLine = true;
-    lineStart = { x, y };
-  } else if (currentTool && currentTool.id === "dottedLine") {
-    isDrawingLine = true;
-    lineStart = { x, y };
-    isDashedLine = true; // Set default to dashed
-  } else if (currentTool && currentTool.type === "svg") {
-    const { img, width, height, aspectRatio } = svgCache.get(currentTool.svgPath);
-
-    // Calculate scaled dimensions using sizePercentage
-    const sizeFactor = currentTool.sizePercentage / 100;
-    const scaledWidth = width * sizeFactor;
-    const scaledHeight = scaledWidth / aspectRatio;
-     // Add SVG object to drawnObjects
-  drawnObjects.push({
-    id: `${currentTool.id}_${Date.now()}`,
-    type: "svg",
-    x,
-    y,
-    width,
-    height,
-    scaledWidth,
-    scaledHeight,
-    svg: img,
-    sizePercentage: currentTool.sizePercentage, // Save sizePercentage for future use
-  });
-
-    redrawCanvas();
-  } else if (selectMode) {
-    let clickedObject = drawnObjects.find((obj) => {
-      if (obj.type === "line") {
-        const distanceToStart = Math.hypot(x - obj.startX, y - obj.startY);
-        const distanceToEnd = Math.hypot(x - obj.endX, y - obj.endY);
-        const lineLength = Math.hypot(obj.endX - obj.startX, obj.endY - obj.startY);
-        const buffer = 5;
-        return (
-          distanceToStart + distanceToEnd >= lineLength - buffer &&
-          distanceToStart + distanceToEnd <= lineLength + buffer
-        );
-      } else if (obj.type === "curve") {
-        const buffer = 5;
-        for (let i = 0; i < obj.points.length - 1; i++) {
-          const pointA = obj.points[i];
-          const pointB = obj.points[i + 1];
-          const distance = pointToSegmentDistance(x, y, pointA, pointB);
-          if (distance <= buffer) {
-            return true;
-          }
-        }
-        return false;
-      } else if (obj.type === "svg") {
-        return (
-          x >= obj.x - obj.scaledWidth / 2 &&
-          x <= obj.x + obj.scaledWidth / 2 &&
-          y >= obj.y - obj.scaledHeight / 2 &&
-          y <= obj.y + obj.scaledHeight / 2
-        );
-      }
-      return false;
-    });
-
-    if (clickedObject) {
-      if (!selectedObjects.includes(clickedObject)) {
-        selectedObjects.push(clickedObject);
-      }
-      dragStart = { x, y }; // Save drag start point
-      isDragging = true; // Start dragging
-      updateToolDetails();
-      redrawCanvas();
-    } else {
-      isSelecting = true;
-      selectionStart = { x, y };
-      selectionBox = { x, y, width: 0, height: 0 };
-      selectedObjects = [];
-    }
-  }
-});
-
-
-canvas.addEventListener("mousemove", (e) => {
-  const rect = canvas.getBoundingClientRect();
-  const x = e.clientX - rect.left;
-  const y = e.clientY - rect.top;
-
-  if (isDrawingLine && currentTool && currentTool.id === "zigzag") {
-    redrawCanvas();
-    ctx.strokeStyle = "#888";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(lineStart.x, lineStart.y);
-
-    // Calculate the zigzag pattern
-    const zigzagSegmentLength = 20; // Length of each zigzag segment
-    const zigzagHeight = 10; // Height of each zigzag peak
-    let currentX = lineStart.x;
-    let currentY = lineStart.y;
-    let isPeakUp = true;
-
-    while (currentX < x) {
-      currentX += zigzagSegmentLength;
-      currentY = isPeakUp ? lineStart.y - zigzagHeight : lineStart.y + zigzagHeight;
-      ctx.lineTo(currentX, currentY);
-      isPeakUp = !isPeakUp;
-    }
-
-    ctx.lineTo(x, y); // Draw to the mouse position
-    ctx.stroke();
-  } else if (isDragging && selectedObjects.length > 0) {
-    // Bereken de verplaatsing
-    const dx = x - dragStart.x;
-    const dy = y - dragStart.y;
-
-    // Pas de verplaatsing toe op elk geselecteerd object
-    selectedObjects.forEach((obj) => {
-      if (obj.type === "svg") {
-        obj.x += dx;
-        obj.y += dy;
-
-        // Optional: Add proportional scaling logic if resizing is implemented here
-        // Example:
-        // obj.scaledWidth += dx;
-        // obj.scaledHeight = obj.scaledWidth / obj.aspectRatio; 
-      } else if (obj.type === "line") {
-        obj.startX += dx;
-        obj.startY += dy;
-        obj.endX += dx;
-        obj.endY += dy;
-      } else if (obj.type === "curve") {
-        obj.points.forEach((point) => {
-          point.x += dx;
-          point.y += dy;
-        });
-      }
-    });
-
-    // Update de startpositie voor de volgende verplaatsing
-    dragStart = { x, y };
-
-    redrawCanvas(); // Herteken het canvas om de wijzigingen weer te geven
-  } else if (isDrawingLine) {
-    redrawCanvas();
-    // Teken visuele preview van de lijn
-    ctx.strokeStyle = "#888";
-    ctx.lineWidth = 2;
-    ctx.setLineDash([5, 5]);
-    ctx.beginPath();
-    ctx.moveTo(lineStart.x, lineStart.y);
-    ctx.lineTo(x, y);
-    ctx.stroke();
-    ctx.setLineDash([]);
-  } else if (isDrawingCurve && currentTool && currentTool.id === "curve") {
-    redrawCanvas();
-    // Teken visuele preview van de curve
-    ctx.strokeStyle = "#888";
-    ctx.lineWidth = 2;
-    ctx.setLineDash([5, 5]);
-    ctx.beginPath();
-    ctx.moveTo(curvePoints[0].x, curvePoints[0].y);
-    for (let i = 1; i < curvePoints.length; i++) {
-      ctx.lineTo(curvePoints[i].x, curvePoints[i].y);
-    }
-    ctx.lineTo(x, y); // Voeg het huidige punt toe als visuele preview
-    ctx.stroke();
-    ctx.setLineDash([]);
-  } else if (isSelecting) {
-    selectionBox.width = x - selectionStart.x;
-    selectionBox.height = y - selectionStart.y;
-    redrawCanvas();
-    // Teken het selectievak
-    ctx.strokeStyle = "red";
-    ctx.lineWidth = 1;
-    ctx.setLineDash([5, 3]);
-    ctx.strokeRect(selectionStart.x, selectionStart.y, selectionBox.width, selectionBox.height);
-    ctx.setLineDash([]);
-
-    // Update geselecteerde objecten op basis van het selectiegebied
-    selectedObjects = drawnObjects.filter((obj) => {
-      if (obj.type === "line" || obj.type === "curve") {
-        return isLineOrCurveInSelectionBox(obj, selectionStart, selectionBox);
-      } else {
-        return (
-          obj.x >= Math.min(selectionStart.x, selectionStart.x + selectionBox.width) &&
-          obj.x <= Math.max(selectionStart.x, selectionStart.x + selectionBox.width) &&
-          obj.y >= Math.min(selectionStart.y, selectionStart.y + selectionBox.height) &&
-          obj.y <= Math.max(selectionStart.y, selectionStart.y + selectionBox.height)
-        );
-      }
-    });
-  }
-});
-
-
-canvas.addEventListener("mouseup", (e) => {
-
-  if (isDrawingLine && currentTool && currentTool.id === "zigzag") {
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    saveHistory();
-    const zigzagPoints = [];
-
-    // Calculate zigzag points
-    const zigzagSegmentLength = 10;
-    const zigzagHeight = 5;
-    let currentX = lineStart.x;
-    let isPeakUp = true;
-
-    while (currentX < x) {
-      currentX += zigzagSegmentLength;
-      const currentY = isPeakUp ? lineStart.y - zigzagHeight : lineStart.y + zigzagHeight;
-      zigzagPoints.push({ x: currentX, y: currentY });
-      isPeakUp = !isPeakUp;
-    }
-    zigzagPoints.push({ x, y });
-
-    drawnObjects.push({
-      type: "zigzag",
-      points: zigzagPoints,
-      color: "#000000",
-      lineWidth: 2,
-    });
-
-    isDrawingLine = false;
-    updateToolDetails();
-    redrawCanvas();
-  } else if (isDrawingLine) {
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    saveHistory();
-    drawnObjects.push({
-      type: "line",
-      startX: lineStart.x,
-      startY: lineStart.y,
-      endX: x,
-      endY: y,
-      isDashed: isDashedLine,
-      color: "#000000",
-      lineWidth: 2,
-    });
-    isDrawingLine = false;
-    updateToolDetails();
-    redrawCanvas();
-  } else if (isDragging) {
-    isDragging = false; // Stop het slepen
-    dragStart = null; // Reset het startpunt voor slepen
-    saveHistory(); // Sla de huidige staat op
-  } else if (isSelecting) {
-    isSelecting = false;
-    selectionBox = null;
-    updateToolDetails();
-    redrawCanvas();
-  }
-  else if (isDrawingLine && currentTool && currentTool.id === "dottedLine") {
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    saveHistory();
-    drawnObjects.push({
-      type: "line",
-      startX: lineStart.x,
-      startY: lineStart.y,
-      endX: x,
-      endY: y,
-      isDashed: true, // Dotted line
-      color: "#000000",
-      lineWidth: 2,
-    });
-    isDrawingLine = false;
-    updateToolDetails();
-    redrawCanvas();
-  }
-  else if (currentTool && currentTool.type === "svg") {
-    const { width, height, aspectRatio } = svgCache.get(currentTool.svgPath);
-
-    const sizeFactor = currentTool.sizePercentage / 100;
-    const scaledWidth = width * sizeFactor;
-    const scaledHeight = scaledWidth / aspectRatio;
-
-    saveHistory();
-    drawnObjects.push({
-      id: `${currentTool.id}_${Date.now()}`,
-      type: "svg",
-      x,
-      y,
-      width,
-      height,
-      scaledWidth,
-      scaledHeight,
-      svg: currentTool.svg,
-      sizePercentage: currentTool.sizePercentage,
-    });
-    redrawCanvas();
-  }
-});
-
-canvas.addEventListener("dblclick", (e) => {
-  if (isDrawingCurve && currentTool && currentTool.id === "curve") {
-    saveHistory();
-    drawnObjects.push({
-      type: "curve",
-      points: [...curvePoints],
-      isDashed: isDashedLine,
-      lineWidth: 2,
-      color: "#000000",
-    });
-    isDrawingCurve = false;
-    curvePoints = [];
-    updateToolDetails();
-    redrawCanvas();
-  }
-});
-
 // Hulpfunctie om de afstand tussen een punt en een lijnsegment te berekenen
 function pointToSegmentDistance(px, py, pointA, pointB) {
   const x1 = pointA.x;
@@ -919,7 +615,6 @@ function pointToSegmentDistance(px, py, pointA, pointB) {
   const dy = py - yy;
   return Math.sqrt(dx * dx + dy * dy);
 }
-
 function isLineOrCurveInSelectionBox(lineOrCurve, selectionStart, selectionBox) {
   const minX = Math.min(selectionStart.x, selectionStart.x + selectionBox.width);
   const maxX = Math.max(selectionStart.x, selectionStart.x + selectionBox.width);
@@ -941,8 +636,6 @@ function isLineOrCurveInSelectionBox(lineOrCurve, selectionStart, selectionBox) 
   }
   return false;
 }
-
-// Functie om de details van de geselecteerde tool bij te werken
 // Functie om de details van de geselecteerde tool bij te werken
 function updateToolDetails() {
   const details = document.getElementById("toolDetails");
@@ -974,13 +667,11 @@ function updateToolDetails() {
         selectedObject.color = e.target.value;
         redrawCanvas();
       });
-    }
-
-    else if (selectedObject.type === "svg") {
+    } else if (selectedObject.type === "svg") {
       details.innerHTML = `
-              <label for="colorPicker">Kleur:</label>
-              <input id="colorPicker" type="color" value="${selectedObject.color}" />
-          `;
+          <label for="colorPicker">Kleur:</label>
+          <input id="colorPicker" type="color" value="${selectedObject.color}" />
+      `;
 
       document.getElementById("colorPicker").addEventListener("input", (e) => {
         selectedObject.color = e.target.value;
@@ -1016,7 +707,6 @@ function updateToolDetails() {
     details.innerHTML = "<p>Geen selectie</p>";
   }
 }
-
 // Functie voor het uitlijnen van geselecteerde objecten
 function alignSelectedObjects(alignment) {
   if (selectedObjects.length < 2) return;
@@ -1095,23 +785,6 @@ function alignSelectedObjects(alignment) {
   // Herteken het canvas na het uitlijnen
   redrawCanvas();
 }
-// **Object Verwijderen**
-document.addEventListener("keydown", (e) => {
-  if (e.key === "Backspace" && selectedObjects.length > 0) {
-    drawnObjects = drawnObjects.filter((obj) => !selectedObjects.includes(obj));
-    selectedObjects = [];
-    redrawCanvas();
-    e.preventDefault();
-  }
-});
-
-
-// **Initialisatie**
-document.addEventListener("DOMContentLoaded", () => {
-  generateToolbar();
-  loadBackground(defaultBackground); // Laad de default achtergrond bij laden van de pagina
-});
-
 // **Helperfunctie voor afstand berekenen**
 function pointToSegmentDistance(px, py, pointA, pointB) {
   const x1 = pointA.x;
@@ -1148,3 +821,287 @@ function pointToSegmentDistance(px, py, pointA, pointB) {
   return Math.sqrt(dx * dx + dy * dy);
 }
 
+
+// **Initialisatie**
+document.addEventListener("DOMContentLoaded", () => {
+  generateToolbar();
+  loadBackground(defaultBackground); // Laad de default achtergrond bij laden van de pagina
+});
+// **Object Plaatsen**
+canvas.addEventListener("click", (e) => {
+  if (selectMode || !currentTool || currentTool.id === "line" || currentTool.id === "dottedLine" || currentTool.id === "zigzag" || currentTool.id === "curve") return;
+
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+
+  loadSvgToCache(currentTool.svgPath, ({ img, width, height }) => {
+    let sizeFactor;
+
+    // Controleer of de grootte als percentage is gedefinieerd
+    if (typeof currentTool.sizePercentage === "number") {
+      sizeFactor = (currentTool.sizePercentage / 100);
+    } else {
+      console.error("sizePercentage is niet gedefinieerd voor het object.");
+      return;
+    }
+
+    const aspectRatio = width / height;
+
+    // Adjust scaledWidth based on canvas size
+    const baseScale = canvas.width / Math.min(canvas.width, canvas.height);
+    const scaledWidth = width * sizeFactor * baseScale;
+
+    // Calculate scaledHeight using the aspect ratio
+    const scaledHeight = scaledWidth / aspectRatio;
+
+    saveHistory(); // Sla de huidige staat op voordat er een nieuw object wordt toegevoegd
+
+    drawnObjects.push({
+      id: `${currentTool.id}_${Date.now()}`,
+      type: "svg",
+      x,
+      y,
+      width,
+      height,
+      sizePercentage: currentTool.sizePercentage,
+      scaledWidth,
+      scaledHeight,
+      svg: img,
+      color: "#000000",
+    });
+    redrawCanvas();
+  });
+});
+// Mouse event listeners voor interactie
+canvas.addEventListener("mousedown", (e) => {
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+
+  if (selectMode) {
+    let clickedObject = drawnObjects.find((obj) => {
+      if (obj.type === "line") {
+        const distanceToStart = Math.hypot(x - obj.startX, y - obj.startY);
+        const distanceToEnd = Math.hypot(x - obj.endX, y - obj.endY);
+        const lineLength = Math.hypot(obj.endX - obj.startX, obj.endY - obj.startY);
+        const buffer = 5;
+        return (
+          distanceToStart + distanceToEnd >= lineLength - buffer &&
+          distanceToStart + distanceToEnd <= lineLength + buffer
+        );
+      } else if (obj.type === "curve") {
+        const buffer = 5;
+        for (let i = 0; i < obj.points.length - 1; i++) {
+          const pointA = obj.points[i];
+          const pointB = obj.points[i + 1];
+          const distance = pointToSegmentDistance(x, y, pointA, pointB);
+          if (distance <= buffer) {
+            return true;
+          }
+        }
+        return false;
+      } else if (obj.type === "svg") {
+        return (
+          x >= obj.x - obj.scaledWidth / 2 &&
+          x <= obj.x + obj.scaledWidth / 2 &&
+          y >= obj.y - obj.scaledHeight / 2 &&
+          y <= obj.y + obj.scaledHeight / 2
+        );
+      }
+      return false;
+    });
+
+    if (clickedObject) {
+      if (!selectedObjects.includes(clickedObject)) {
+        if (e.shiftKey) {
+          selectedObjects.push(clickedObject);
+        } else {
+          selectedObjects = [clickedObject];
+        }
+      }
+      dragStart = { x, y }; // Save drag start point
+      isDragging = true; // Start dragging
+      updateToolDetails();
+      redrawCanvas();
+    } else {
+      isSelecting = true;
+      selectionStart = { x, y };
+      selectionBox = { x, y, width: 0, height: 0 };
+      if (!e.shiftKey) {
+        selectedObjects = [];
+      }
+    }
+  } else if (currentTool && currentTool.id === "curve") {
+    if (!isDrawingCurve) {
+      isDrawingCurve = true;
+      curvePoints = [{ x, y }];
+    } else {
+      curvePoints.push({ x, y });
+    }
+    redrawCanvas();
+  } else if (currentTool && currentTool.id === "line") {
+    isDrawingLine = true;
+    lineStart = { x, y };
+  } else if (currentTool && currentTool.id === "dottedLine") {
+    isDrawingLine = true;
+    lineStart = { x, y };
+    isDashedLine = true; // Set default to dashed
+  } else if (currentTool && currentTool.id === "zigzag") {
+    isDrawingLine = true;
+    lineStart = { x, y };
+  }
+});
+canvas.addEventListener("mousemove", (e) => {
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+
+  if (isDrawingLine && currentTool && currentTool.id === "zigzag") {
+    redrawCanvas();
+    ctx.strokeStyle = "#888";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(lineStart.x, lineStart.y);
+
+    // Calculate the zigzag pattern
+    const zigzagSegmentLength = 20; // Length of each zigzag segment
+    const zigzagHeight = 10; // Height of each zigzag peak
+    let currentX = lineStart.x;
+    let currentY = lineStart.y;
+    let isPeakUp = true;
+
+    const dx = x - lineStart.x;
+    const dy = y - lineStart.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    const steps = Math.floor(distance / zigzagSegmentLength);
+
+    for (let i = 0; i < steps; i++) {
+      const angle = Math.atan2(dy, dx);
+      currentX += zigzagSegmentLength * Math.cos(angle);
+      currentY += zigzagSegmentLength * Math.sin(angle);
+      currentY += isPeakUp ? zigzagHeight : -zigzagHeight;
+      ctx.lineTo(currentX, currentY);
+      isPeakUp = !isPeakUp;
+    }
+
+    ctx.lineTo(x, y); // Draw to the mouse position
+    ctx.stroke();
+  } else if (isDrawingLine) {
+    redrawCanvas();
+    // Draw visual preview of the line
+    ctx.strokeStyle = "#888";
+    ctx.lineWidth = 2;
+    ctx.setLineDash([5, 5]);
+    ctx.beginPath();
+    ctx.moveTo(lineStart.x, lineStart.y);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  } else if (isDrawingCurve && currentTool && currentTool.id === "curve") {
+    redrawCanvas();
+    // Draw visual preview of the curve
+    ctx.strokeStyle = "#888";
+    ctx.lineWidth = 2;
+    ctx.setLineDash([5, 5]);
+    ctx.beginPath();
+    ctx.moveTo(curvePoints[0].x, curvePoints[0].y);
+    for (let i = 1; i < curvePoints.length; i++) {
+      const cp = curvePoints[i];
+      const prev = curvePoints[i - 1];
+      const midX = (prev.x + cp.x) / 2;
+      const midY = (prev.y + cp.y) / 2;
+      ctx.quadraticCurveTo(prev.x, prev.y, midX, midY);
+    }
+    ctx.quadraticCurveTo(curvePoints[curvePoints.length - 1].x, curvePoints[curvePoints.length - 1].y, x, y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+});
+canvas.addEventListener("mouseup", (e) => {
+  if (isDrawingLine && currentTool && currentTool.id === "zigzag") {
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    saveHistory();
+    const zigzagPoints = [];
+
+    // Calculate zigzag points
+    const zigzagSegmentLength = 20;
+    const zigzagHeight = 10;
+    let currentX = lineStart.x;
+    let currentY = lineStart.y;
+    let isPeakUp = true;
+
+    const dx = x - lineStart.x;
+    const dy = y - lineStart.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    const steps = Math.floor(distance / zigzagSegmentLength);
+
+    for (let i = 0; i < steps; i++) {
+      const angle = Math.atan2(dy, dx);
+      currentX += zigzagSegmentLength * Math.cos(angle);
+      currentY += zigzagSegmentLength * Math.sin(angle);
+      currentY += isPeakUp ? zigzagHeight : -zigzagHeight;
+      zigzagPoints.push({ x: currentX, y: currentY });
+      isPeakUp = !isPeakUp;
+    }
+
+    zigzagPoints.push({ x, y });
+
+    drawnObjects.push({
+      type: "zigzag",
+      points: zigzagPoints,
+      color: "#000000",
+      lineWidth: 2,
+    });
+
+    isDrawingLine = false;
+    updateToolDetails();
+    redrawCanvas();
+  } else if (isDrawingLine) {
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    saveHistory();
+    drawnObjects.push({
+      type: "line",
+      startX: lineStart.x,
+      startY: lineStart.y,
+      endX: x,
+      endY: y,
+      isDashed: isDashedLine,
+      color: "#000000",
+      lineWidth: 2,
+    });
+    isDrawingLine = false;
+    updateToolDetails();
+    redrawCanvas();
+  }
+});
+canvas.addEventListener("dblclick", (e) => {
+  if (isDrawingCurve && currentTool && currentTool.id === "curve") {
+    saveHistory();
+    drawnObjects.push({
+      type: "curve",
+      points: [...curvePoints],
+      isDashed: isDashedLine,
+      lineWidth: 2,
+      color: "#000000",
+    });
+    isDrawingCurve = false;
+    curvePoints = [];
+    updateToolDetails();
+    redrawCanvas();
+  }
+});
+// **Object Verwijderen**
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Backspace" && selectedObjects.length > 0) {
+    drawnObjects = drawnObjects.filter((obj) => !selectedObjects.includes(obj));
+    selectedObjects = [];
+    redrawCanvas();
+    e.preventDefault();
+  }
+});

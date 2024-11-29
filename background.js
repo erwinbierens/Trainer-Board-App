@@ -2,13 +2,13 @@
 const availableBackgrounds = [
     {
       id: "landscape",
-      label: "Landschap",
-      svgPath: "img/landscape.svg",
+      label: "Voetbalveld",
+      svgPath: "img/grass.svg",
     },
     {
       id: "grass",
       label: "Gras",
-      svgPath: "img/grass.svg",
+      svgPath: "img/landscape.svg",
     },
     {
       id: "grass1",
