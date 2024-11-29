@@ -4,7 +4,6 @@ const availableObjects = [
     {
       id: "goal",
       label: "Goal",
-      defaultSize: 10, // Standaardgrootte
       svgPath: "img/goals/goal.svg",
       sizePercentage: 100,
       resizable: false, // Grootte kan worden aangepast
@@ -34,9 +33,9 @@ const availableObjects = [
     {
         id: "bal",
         label: "Bal",
-        sizePercentage: 100,
+        sizePercentage: 25,
         svgPath: "img/material/ball.svg",
-        resizable: true, // Grootte kan worden aangepast
+        resizable: false, // Grootte kan worden aangepast
       },
       {
         id: "hoedje",

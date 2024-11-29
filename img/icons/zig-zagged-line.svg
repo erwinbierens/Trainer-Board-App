@@ -1,10 +1,10 @@
  <svg xmlns="http://www.w3.org/2000/svg" width="10" height="24" viewBox="0 0 10 24" version="1.1">
     <g stroke="none" strokeWidth="1" fill="none" fillRule="evenodd">
-        <g transform="translate(-390, -659)" fill="#333333">
+        <g transform="translate(-470, -659)" fill="#333333">
             <g transform="translate(165, 95)">
                 <g transform="translate(40, 511)">
-                    <g transform="translate(160, 35)">
-                        <polygon fill="currentColor" points="31 26 31 42 29 42 29 26 25 26 30 18 35 26" />
+                    <g transform="translate(240, 35)">
+                        <polygon fill="currentColor" points="25.7 32 31.3 32 29.3 26 25 26 30 18 35 26 31.3 26 34 34 28.3 34 31 42 29 42" />
                     </g>
                 </g>
             </g>

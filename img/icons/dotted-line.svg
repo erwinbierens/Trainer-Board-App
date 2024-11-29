@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="10" height="24" viewBox="0 0 10 24" version="1.1">
+    <g stroke="none" strokeWidth="1" fill="none" fillRule="evenodd">
+        <g transform="translate(-230, -659)" fill="#333333">
+            <g transform="translate(165, 95)">
+                <g transform="translate(40, 511)">
+                    <g transform="translate(0, 35)">
+                        <path fill="currentColor" d="M31 26L31 28 29 28 29 26 25 26 30 18 35 26 31 26ZM29 31L31 31 31 35 29 35 29 31ZM29 38L31 38 31 42 29 42 29 38Z"
+                        />
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>
