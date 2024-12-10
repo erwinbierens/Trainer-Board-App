@@ -1,44 +1,56 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- Generator: Adobe Illustrator 27.8.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
-<svg version="1.1" id="Linien" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-	 viewBox="0 0 757.3 568" style="enable-background:new 0 0 757.3 568;" xml:space="preserve">
-<style type="text/css">
-	.st0{fill:#77AD63;}
-	.st1{fill:#A5CF91;}
-	.st2{fill:none;stroke:#FFFFFF;stroke-width:2;}
-	.st3{fill:#FFFFFF;}
-</style>
-<g>
-	<rect y="0" class="st0" width="757.3" height="568"/>
-</g>
-<polygon class="st1" points="7.6,568 7.6,0 41.4,0 41.4,568 "/>
-<polygon class="st1" points="614.9,568 614.9,0 648.6,0 648.6,568 "/>
-<polygon class="st1" points="547.4,568 547.4,0 581.1,0 581.1,568 "/>
-<polygon class="st1" points="479.9,568 479.9,0 513.6,0 513.6,568 "/>
-<polygon class="st1" points="412.4,568 412.4,0 446.2,0 446.2,568 "/>
-<polygon class="st1" points="682.4,568 682.4,0 716.1,0 716.1,568 "/>
-<polygon class="st1" points="277.6,568 277.6,0 311.3,0 311.3,568 "/>
-<polygon class="st1" points="210.1,568 210.1,0 243.8,0 243.8,568 "/>
-<polygon class="st1" points="142.6,568 142.6,0 176.3,0 176.3,568 "/>
-<polygon class="st1" points="75.1,568 75.1,0 108.9,0 108.9,568 "/>
-<polygon class="st1" points="345.1,568 345.1,0 378.8,0 378.8,568 "/>
-<polygon class="st1" points="749.9,568 749.9,0 757.3,0 757.3,568 "/>
-<g>
-	<rect x="41.3" y="62.8" class="st2" width="674.7" height="460"/>
-	<polyline class="st2" points="716,416.5 614.8,416.5 614.8,169.1 716,169.1 	"/>
-	<polyline class="st2" points="716,349 682.3,349 682.3,236.6 716,236.6 	"/>
-	<line class="st2" x1="378.6" y1="522.8" x2="378.6" y2="62.8"/>
-	<circle class="st2" cx="378.6" cy="292.8" r="56.1"/>
-	<path class="st2" d="M41.3,516.7c3.4,0,6.1,2.7,6.1,6.1"/>
-	<path class="st2" d="M47.4,62.8c0,3.4-2.8,6.1-6.1,6.1"/>
-	<path class="st2" d="M716,68.9c-3.4,0-6.1-2.8-6.1-6.1"/>
-	<path class="st2" d="M709.9,522.8c0-3.4,2.8-6.1,6.1-6.1"/>
-	<path class="st2" d="M614.8,337.6c-13.6-10.2-22.3-26.5-22.3-44.8c0-18.3,8.8-34.6,22.3-44.8"/>
-	<circle class="st3" cx="648.5" cy="292.8" r="2.2"/>
-	<polyline class="st2" points="41.3,169.1 142.5,169.1 142.5,416.5 41.3,416.5 	"/>
-	<polyline class="st2" points="41.3,236.6 75,236.6 75,349 41.3,349 	"/>
-	<path class="st2" d="M142.6,248c13.6,10.2,22.4,26.5,22.4,44.8c0,18.3-8.8,34.6-22.4,44.8"/>
-	<circle class="st3" cx="108.8" cy="292.8" r="2.1"/>
-	<circle class="st3" cx="378.6" cy="292.8" r="2.1"/>
-</g>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Linien" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 757.3 568">
+  <!-- Generator: Adobe Illustrator 29.1.0, SVG Export Plug-In . SVG Version: 2.1.0 Build 142)  -->
+  <defs>
+    <style>
+      .st0 {
+        fill: #92dab0;
+      }
+
+      .st1 {
+        fill: #fff;
+      }
+
+      .st2 {
+        fill: #b2e7c7;
+      }
+
+      .st3 {
+        fill: none;
+        stroke: #fff;
+        stroke-width: 2px;
+      }
+    </style>
+  </defs>
+  <rect class="st2" y="0" width="757.3" height="568"/>
+  <polygon class="st0" points="7.6 568 7.6 0 41.4 0 41.4 568 7.6 568"/>
+  <polygon class="st0" points="614.9 568 614.9 0 648.6 0 648.6 568 614.9 568"/>
+  <polygon class="st0" points="547.4 568 547.4 0 581.1 0 581.1 568 547.4 568"/>
+  <polygon class="st0" points="479.9 568 479.9 0 513.6 0 513.6 568 479.9 568"/>
+  <polygon class="st0" points="412.4 568 412.4 0 446.2 0 446.2 568 412.4 568"/>
+  <polygon class="st0" points="682.4 568 682.4 0 716.1 0 716.1 568 682.4 568"/>
+  <polygon class="st0" points="277.6 568 277.6 0 311.3 0 311.3 568 277.6 568"/>
+  <polygon class="st0" points="210.1 568 210.1 0 243.8 0 243.8 568 210.1 568"/>
+  <polygon class="st0" points="142.6 568 142.6 0 176.3 0 176.3 568 142.6 568"/>
+  <polygon class="st0" points="75.1 568 75.1 0 108.9 0 108.9 568 75.1 568"/>
+  <polygon class="st0" points="345.1 568 345.1 0 378.8 0 378.8 568 345.1 568"/>
+  <polygon class="st0" points="749.9 568 749.9 0 757.3 0 757.3 568 749.9 568"/>
+  <g>
+    <rect class="st3" x="41.3" y="62.8" width="674.7" height="460"/>
+    <polyline class="st3" points="716 416.5 614.8 416.5 614.8 169.1 716 169.1"/>
+    <polyline class="st3" points="716 349 682.3 349 682.3 236.6 716 236.6"/>
+    <line class="st3" x1="378.6" y1="522.8" x2="378.6" y2="62.8"/>
+    <circle class="st3" cx="378.6" cy="292.8" r="56.1"/>
+    <path class="st3" d="M41.3,516.7c3.4,0,6.1,2.7,6.1,6.1"/>
+    <path class="st3" d="M47.4,62.8c0,3.4-2.8,6.1-6.1,6.1"/>
+    <path class="st3" d="M716,68.9c-3.4,0-6.1-2.8-6.1-6.1"/>
+    <path class="st3" d="M709.9,522.8c0-3.4,2.8-6.1,6.1-6.1"/>
+    <path class="st3" d="M614.8,337.6c-13.6-10.2-22.3-26.5-22.3-44.8s8.8-34.6,22.3-44.8"/>
+    <circle class="st1" cx="648.5" cy="292.8" r="2.2"/>
+    <polyline class="st3" points="41.3 169.1 142.5 169.1 142.5 416.5 41.3 416.5"/>
+    <polyline class="st3" points="41.3 236.6 75 236.6 75 349 41.3 349"/>
+    <path class="st3" d="M142.6,248c13.6,10.2,22.4,26.5,22.4,44.8s-8.8,34.6-22.4,44.8"/>
+    <circle class="st1" cx="108.8" cy="292.8" r="2.1"/>
+    <circle class="st1" cx="378.6" cy="292.8" r="2.1"/>
+  </g>
 </svg>

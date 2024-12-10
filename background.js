@@ -2,7 +2,7 @@
 const availableBackgrounds = [
     {
       id: "landscape",
-      label: "Voetbalveld",
+      label: "Volledig veld",
       svgPath: "img/grass.svg",
     },
     {
@@ -12,18 +12,23 @@ const availableBackgrounds = [
     },
     {
       id: "grass1",
-      label: "Grass only",
+      label: "Grass Brede lijnen",
       svgPath: "img/landscape_near.svg",
     },
     {
         id: "left",
-        label: "Left",
+        label: "Linker helft",
         svgPath: "img/left.svg",
       },
       {
         id: "right",
-        label: "Right",
+        label: "Rechter helft",
         svgPath: "img/right.svg",
+      },
+      {
+        id: "top",
+        label: "Bovenaanzicht",
+        svgPath: "img/top.svg",
       },
   ];
   
